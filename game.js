@@ -328,3 +328,376 @@ function updateBall() {
 
     ball.rotation.x += 0.01;
 }
+// ==========================================
+// COMMANDES CLAVIER
+// ==========================================
+
+const keys = {};
+
+window.addEventListener("keydown", event => {
+    keys[event.key.toLowerCase()] = true;
+
+    if (event.code === "Space") {
+        event.preventDefault();
+        passBall();
+    }
+});
+
+window.addEventListener("keyup", event => {
+    keys[event.key.toLowerCase()] = false;
+});
+
+const keyboardInput = {
+    x: 0,
+    y: 0,
+    sprint: false
+};
+
+function readKeyboard() {
+    keyboardInput.x = 0;
+    keyboardInput.y = 0;
+
+    if (keys["arrowleft"] || keys["q"] || keys["a"])
+        keyboardInput.x--;
+
+    if (keys["arrowright"] || keys["d"])
+        keyboardInput.x++;
+
+    if (keys["arrowup"] || keys["z"] || keys["w"])
+        keyboardInput.y++;
+
+    if (keys["arrowdown"] || keys["s"])
+        keyboardInput.y--;
+
+    keyboardInput.sprint = !!keys["shift"];
+}
+
+// ==========================================
+// COMMANDES TACTILES
+// ==========================================
+
+const joystick = document.getElementById("joystick");
+const knob = document.getElementById("joystick-knob");
+
+const touchInput = {
+    x: 0,
+    y: 0,
+    sprint: false
+};
+
+let joystickPointer = null;
+
+function updateJoystick(event) {
+    const rect = joystick.getBoundingClientRect();
+
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+
+    let dx = event.clientX - centerX;
+    let dy = event.clientY - centerY;
+
+    const max = 32;
+    const distance = Math.hypot(dx, dy);
+
+    if (distance > max) {
+        dx = dx / distance * max;
+        dy = dy / distance * max;
+    }
+
+    touchInput.x = dx / max;
+    touchInput.y = -dy / max;
+
+    knob.style.transform = `translate(${dx}px, ${dy}px)`;
+}
+
+joystick.addEventListener("pointerdown", event => {
+    joystickPointer = event.pointerId;
+    joystick.setPointerCapture(event.pointerId);
+    updateJoystick(event);
+});
+
+joystick.addEventListener("pointermove", event => {
+    if (event.pointerId === joystickPointer) {
+        updateJoystick(event);
+    }
+});
+
+function releaseJoystick(event) {
+    if (event.pointerId !== joystickPointer) return;
+
+    joystickPointer = null;
+    touchInput.x = 0;
+    touchInput.y = 0;
+
+    knob.style.transform = "translate(0,0)";
+}
+
+joystick.addEventListener("pointerup", releaseJoystick);
+joystick.addEventListener("pointercancel", releaseJoystick);
+
+// ==========================================
+// SPRINT
+// ==========================================
+
+const sprintButton = document.getElementById("sprint-button");
+
+sprintButton.addEventListener("pointerdown", event => {
+    touchInput.sprint = true;
+    sprintButton.setPointerCapture(event.pointerId);
+});
+
+function releaseSprint() {
+    touchInput.sprint = false;
+}
+
+sprintButton.addEventListener("pointerup", releaseSprint);
+sprintButton.addEventListener("pointercancel", releaseSprint);
+sprintButton.addEventListener("lostpointercapture", releaseSprint);
+
+// ==========================================
+// ENTRÉES DU JOUEUR
+// ==========================================
+
+const input = {
+    x: 0,
+    y: 0,
+    sprint: false
+};
+
+function updateInput() {
+    const touchActive =
+        Math.hypot(touchInput.x, touchInput.y) > 0.05;
+
+    input.x = touchActive ? touchInput.x : keyboardInput.x;
+    input.y = touchActive ? touchInput.y : keyboardInput.y;
+
+    input.sprint =
+        touchInput.sprint || keyboardInput.sprint;
+}
+
+// ==========================================
+// PASSES
+// ==========================================
+
+function passBall() {
+    if (!running || !carrier) return;
+
+    const options = attackers.filter(player =>
+        player !== carrier &&
+        player.z >= carrier.z - 12 &&
+        Math.abs(player.x - carrier.x) < 25
+    );
+
+    if (options.length === 0) return;
+
+    options.sort((a, b) => {
+        const da = Math.hypot(
+            a.x - carrier.x,
+            a.z - carrier.z
+        );
+
+        const db = Math.hypot(
+            b.x - carrier.x,
+            b.z - carrier.z
+        );
+
+        return da - db;
+    });
+
+    carrier = options[0];
+
+    showMessage("PASSE !");
+}
+
+document.getElementById("pass-button").addEventListener(
+    "pointerdown",
+    event => {
+        event.preventDefault();
+        passBall();
+    }
+);
+
+// ==========================================
+// DÉPLACEMENT DES JOUEURS
+// ==========================================
+
+function movePlayer(player, dt) {
+    const dx = player.targetX - player.x;
+    const dz = player.targetZ - player.z;
+
+    const distance = Math.hypot(dx, dz);
+
+    if (distance < 0.05) return;
+
+    const step = Math.min(
+        player.speed * dt,
+        distance
+    );
+
+    player.x += dx / distance * step;
+    player.z += dz / distance * step;
+
+    player.group.position.set(
+        player.x,
+        0,
+        player.z
+    );
+
+    player.group.rotation.y = Math.atan2(dx, dz);
+}
+
+// ==========================================
+// DÉPLACEMENT DU PORTEUR
+// ==========================================
+
+function updateUser(dt) {
+    if (!carrier) return;
+
+    const length = Math.hypot(input.x, input.y);
+    const factor = length > 1 ? 1 / length : 1;
+    const speed = input.sprint ? 10 : 7;
+
+    carrier.x += input.x * factor * speed * dt;
+    carrier.z += input.y * factor * speed * dt;
+
+    carrier.x = THREE.MathUtils.clamp(carrier.x, -32, 32);
+    carrier.z = THREE.MathUtils.clamp(carrier.z, -59, 59);
+
+    carrier.group.position.set(
+        carrier.x,
+        0,
+        carrier.z
+    );
+
+    if (length > 0.1) {
+        carrier.group.rotation.y = Math.atan2(
+            input.x,
+            input.y
+        );
+    }
+}
+
+// ==========================================
+// INTELLIGENCE ARTIFICIELLE DÉFENSIVE
+// ==========================================
+
+function updateAI(dt) {
+    if (!carrier) return;
+
+    const settings = difficultySettings[difficulty];
+
+    for (const defender of defenders) {
+        defender.targetX = carrier.x;
+        defender.targetZ = carrier.z;
+        defender.speed = settings.speed;
+
+        movePlayer(defender, dt);
+    }
+}
+
+// ==========================================
+// DÉPLACEMENT DES COÉQUIPIERS
+// ==========================================
+
+function updateTeammates(dt) {
+    if (!carrier) return;
+
+    for (const player of attackers) {
+        if (player === carrier) continue;
+
+        const lane = (player.index % 5 - 2) * 5;
+
+        player.targetX = THREE.MathUtils.clamp(
+            carrier.x + lane,
+            -30,
+            30
+        );
+
+        player.targetZ = Math.max(
+            -40,
+            carrier.z - 4 - Math.floor(player.index / 5) * 3
+        );
+
+        player.speed = 5.5;
+
+        movePlayer(player, dt);
+    }
+}
+
+// ==========================================
+// PLAQUAGES
+// ==========================================
+
+function checkTackles(dt) {
+    tackleCooldown -= dt;
+
+    if (tackleCooldown > 0 || !carrier) return;
+
+    const settings = difficultySettings[difficulty];
+
+    for (const defender of defenders) {
+        const distance = Math.hypot(
+            defender.x - carrier.x,
+            defender.z - carrier.z
+        );
+
+        if (distance < settings.tackle) {
+            carrier.z -= 3;
+
+            carrier.x += Math.random() > 0.5 ? 2 : -2;
+
+            carrier.x = THREE.MathUtils.clamp(
+                carrier.x,
+                -30,
+                30
+            );
+
+            carrier.group.position.set(
+                carrier.x,
+                0,
+                carrier.z
+            );
+
+            tackleCooldown = 2.2;
+
+            showMessage("PLAQUAGE !");
+
+            break;
+        }
+    }
+}
+
+// ==========================================
+// REMISE EN JEU
+// ==========================================
+
+function resetFormation() {
+    for (let i = 0; i < 15; i++) {
+        const lane = (i % 5 - 2) * 5;
+        const row = Math.floor(i / 5);
+
+        const attacker = attackers[i];
+        const defender = defenders[i];
+
+        attacker.x = lane;
+        attacker.z = -37 - row * 3;
+
+        defender.x = lane;
+        defender.z = -18 + row * 5;
+
+        attacker.group.position.set(
+            attacker.x,
+            0,
+            attacker.z
+        );
+
+        defender.group.position.set(
+            defender.x,
+            0,
+            defender.z
+        );
+    }
+
+    carrier = attackers[7];
+    tackleCooldown = 2;
+}
