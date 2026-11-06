@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rugby Clash</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div id="game-container">
+        <header id="scoreboard">
+            <div class="team">RUGBY CLASH</div>
+            <div id="score">
+                <span id="player-score">0</span>
+                -
+                <span id="opponent-score">0</span>
+            </div>
+            <div id="timer">03:00</div>
+        </header>
+
+        <main id="game">
+            <div id="start-screen">
+                <h1>RUGBY CLASH</h1>
+                <p>Affronte l'intelligence artificielle !</p>
+
+                <label for="difficulty">Difficulté</label>
+                <select id="difficulty">
+                    <option value="0">Débutant</option>
+                    <option value="1" selected>Amateur</option>
+                    <option value="2">Professionnel</option>
+                    <option value="3">International</option>
+                    <option value="4">Légende</option>
+                </select>
+
+                <button id="start-button">LANCER LE MATCH</button>
+            </div>
+
+            <div id="game-message"></div>
+
+            <div id="controls">
+                <div id="joystick">
+                    <div id="joystick-knob"></div>
+                </div>
+
+                <div id="action-buttons">
+                    <button id="sprint-button">SPRINT</button>
+                    <button id="pass-button">PASSE</button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"
+        }
+    }
+    </script>
+
+    <script type="module" src="game.js"></script>
+
+</body>
+</html>
