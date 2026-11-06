@@ -1,0 +1,238 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+}
+
+body {
+    width: 100%;
+    height: 100vh;
+    overflow: hidden;
+    background: #07130e;
+    color: white;
+    font-family: Arial, sans-serif;
+    touch-action: none;
+}
+
+#game-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+#scoreboard {
+    position: absolute;
+    top: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(460px, 94%);
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    padding: 12px;
+    background: rgba(5, 15, 12, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    z-index: 10;
+}
+
+.team {
+    font-size: 12px;
+    font-weight: bold;
+    text-align: center;
+}
+
+#score {
+    font-size: 28px;
+    font-weight: 900;
+}
+
+#timer {
+    color: #a8ffbe;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+#game {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+}
+
+#game canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+#start-screen {
+    position: absolute;
+    inset: 0;
+    z-index: 30;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 25px;
+    text-align: center;
+    background: rgba(0, 12, 8, 0.96);
+}
+
+#start-screen h1 {
+    font-size: clamp(35px, 8vw, 55px);
+    font-weight: 900;
+    letter-spacing: 3px;
+    color: #38d987;
+    margin-bottom: 15px;
+}
+
+#start-screen p {
+    color: #c5d8cb;
+    margin-bottom: 25px;
+    line-height: 1.5;
+}
+
+#start-screen label {
+    margin-bottom: 8px;
+    font-weight: bold;
+}
+
+#difficulty {
+    width: min(300px, 90%);
+    padding: 14px;
+    background: #203c2d;
+    color: white;
+    border: 1px solid #54765e;
+    border-radius: 8px;
+    font-size: 15px;
+}
+
+#start-button {
+    width: min(300px, 90%);
+    padding: 16px;
+    margin-top: 20px;
+    border: none;
+    border-radius: 10px;
+    background: #15945c;
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+#start-button:active {
+    transform: scale(0.97);
+    background: #0d7044;
+}
+
+#game-message {
+    position: absolute;
+    top: 42%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 15;
+    font-size: clamp(25px, 6vw, 45px);
+    font-weight: 900;
+    text-align: center;
+    text-shadow: 0 3px 12px black;
+    pointer-events: none;
+}
+
+#controls {
+    position: absolute;
+    bottom: 25px;
+    left: 0;
+    right: 0;
+    z-index: 20;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    padding: 0 22px;
+    pointer-events: none;
+}
+
+#joystick {
+    width: 115px;
+    height: 115px;
+    border-radius: 50%;
+    position: relative;
+    background: rgba(255, 255, 255, 0.14);
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    pointer-events: auto;
+    touch-action: none;
+}
+
+#joystick-knob {
+    position: absolute;
+    top: 31px;
+    left: 31px;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.5);
+    pointer-events: none;
+}
+
+#action-buttons {
+    display: flex;
+    gap: 12px;
+    align-items: flex-end;
+    pointer-events: auto;
+}
+
+#action-buttons button {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    background: rgba(15, 35, 25, 0.95);
+    color: white;
+    font-size: 11px;
+    font-weight: bold;
+    touch-action: none;
+}
+
+#pass-button {
+    width: 82px !important;
+    height: 82px !important;
+    background: #187c53 !important;
+}
+
+#action-buttons button:active {
+    transform: scale(0.93);
+}
+
+@media (max-width: 600px) {
+    #controls {
+        padding: 0 14px;
+        bottom: 20px;
+    }
+
+    #joystick {
+        width: 105px;
+        height: 105px;
+    }
+
+    #joystick-knob {
+        top: 27px;
+        left: 27px;
+    }
+
+    #action-buttons {
+        gap: 8px;
+    }
+
+    #action-buttons button {
+        width: 62px;
+        height: 62px;
+    }
+
+    #pass-button {
+        width: 72px !important;
+        height: 72px !important;
+    }
+}
