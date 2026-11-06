@@ -701,3 +701,194 @@ function resetFormation() {
     carrier = attackers[7];
     tackleCooldown = 2;
 }
+// ==========================================
+// ESSAIS
+// ==========================================
+
+function checkTry() {
+    if (!carrier) return;
+
+    if (carrier.z >= 50) {
+        score += 5;
+
+        document.getElementById("player-score").textContent = score;
+
+        showMessage("ESSAI ! +5");
+
+        resetFormation();
+    }
+}
+
+// ==========================================
+// CAMÉRA 3D
+// ==========================================
+
+const cameraTarget = new THREE.Vector3();
+
+function updateCamera(dt) {
+    if (!carrier) return;
+
+    const desired = new THREE.Vector3(
+        carrier.x * 0.65,
+        17,
+        carrier.z - 23
+    );
+
+    camera.position.lerp(
+        desired,
+        Math.min(1, dt * 3)
+    );
+
+    cameraTarget.set(
+        carrier.x,
+        0,
+        carrier.z + 12
+    );
+
+    camera.lookAt(cameraTarget);
+}
+
+// ==========================================
+// MESSAGES À L'ÉCRAN
+// ==========================================
+
+function showMessage(text) {
+    const element = document.getElementById("game-message");
+
+    element.textContent = text;
+
+    messageTimer = 1.5;
+}
+
+// ==========================================
+// CHRONOMÈTRE
+// ==========================================
+
+function updateClock(dt) {
+    if (!running) return;
+
+    timeLeft -= dt;
+
+    if (timeLeft <= 0) {
+        timeLeft = 0;
+        running = false;
+
+        let result = "MATCH NUL !";
+
+        if (score > opponentScore) {
+            result = "VICTOIRE !";
+        }
+
+        if (score < opponentScore) {
+            result = "DÉFAITE !";
+        }
+
+        showMessage(result);
+
+        setTimeout(() => {
+            document.getElementById("start-screen").style.display = "flex";
+
+            document.getElementById("start-button").textContent = "REJOUER";
+        }, 1800);
+    }
+
+    const minutes = Math.floor(timeLeft / 60);
+    const seconds = Math.floor(timeLeft % 60);
+
+    document.getElementById("timer").textContent =
+        String(minutes).padStart(2, "0") +
+        ":" +
+        String(seconds).padStart(2, "0");
+}
+
+// ==========================================
+// LANCEMENT DU MATCH
+// ==========================================
+
+document.getElementById("start-button").addEventListener("click", () => {
+    difficulty = parseInt(
+        document.getElementById("difficulty").value,
+        10
+    );
+
+    score = 0;
+    opponentScore = 0;
+    timeLeft = MATCH_DURATION;
+
+    document.getElementById("player-score").textContent = "0";
+    document.getElementById("opponent-score").textContent = "0";
+    document.getElementById("timer").textContent = "03:00";
+
+    resetFormation();
+
+    document.getElementById("start-screen").style.display = "none";
+
+    running = true;
+
+    showMessage("COUP D'ENVOI !");
+});
+
+// ==========================================
+// BOUCLE PRINCIPALE DU JEU
+// ==========================================
+
+let previousTime = performance.now();
+
+function animate(now) {
+    requestAnimationFrame(animate);
+
+    const dt = Math.min(
+        (now - previousTime) / 1000,
+        0.05
+    );
+
+    previousTime = now;
+
+    if (running) {
+        readKeyboard();
+        updateInput();
+
+        updateUser(dt);
+        updateAI(dt);
+        updateTeammates(dt);
+
+        checkTackles(dt);
+        checkTry();
+
+        updateBall();
+        updateClock(dt);
+
+        if (messageTimer > 0) {
+            messageTimer -= dt;
+
+            if (messageTimer <= 0) {
+                document.getElementById("game-message").textContent = "";
+            }
+        }
+    }
+
+    updateCamera(dt);
+
+    renderer.render(scene, camera);
+}
+
+requestAnimationFrame(animate);
+
+// ==========================================
+// REDIMENSIONNEMENT DE L'ÉCRAN
+// ==========================================
+
+window.addEventListener("resize", () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+
+    camera.updateProjectionMatrix();
+
+    renderer.setSize(
+        window.innerWidth,
+        window.innerHeight
+    );
+
+    renderer.setPixelRatio(
+        Math.min(window.devicePixelRatio, 1.5)
+    );
+});
